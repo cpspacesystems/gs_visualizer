@@ -6,3 +6,9 @@ edition = "2024"
 [dependencies]
 foxglove = "0.21.0"
 tism = { path = "../tism" }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

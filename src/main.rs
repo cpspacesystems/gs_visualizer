@@ -1,25 +1,31 @@
-use foxglove::{
-    WebSocketServer, log,
-    messages::{Log, Timestamp, log::Level},
-};
-use std::{thread, time::Duration};
+use gs_visualizer::{Bridge, BridgeError, load_config};
+use std::{env, ffi::OsString, process::ExitCode};
 
-fn main() {
-    WebSocketServer::new()
-        .start_blocking()
-        .expect("Server failed to start");
-
-    loop {
-        log!(
-            "/hello",
-            Log {
-                level: Level::Info.into(),
-                timestamp: Some(Timestamp::now()),
-                message: "Hello, Foxglove!".to_string(),
-                ..Default::default()
-            }
-        );
-        thread::sleep(Duration::from_millis(100));
+#[tokio::main]
+async fn main() -> ExitCode {
+    if let Err(err) = run().await {
+        eprintln!("{err}");
+        return ExitCode::FAILURE;
     }
+
+    ExitCode::SUCCESS
 }
 
+async fn run() -> Result<(), BridgeError> {
+    let config_path = config_path_from_args()?;
+    let config = load_config(&config_path)?;
+    let bridge = Bridge::from_config(config)?;
+    bridge.run_until_shutdown().await
+}
+
+fn config_path_from_args() -> Result<OsString, BridgeError> {
+    let mut args = env::args_os();
+    let _binary = args.next();
+
+    match (args.next(), args.next()) {
+        (Some(path), None) => Ok(path),
+        _ => Err(BridgeError::Argument(
+            "usage: gs_visualizer <config.toml>".to_string(),
+        )),
+    }
+}
