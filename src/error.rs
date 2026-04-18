@@ -3,6 +3,7 @@ use std::{io, path::PathBuf};
 use foxglove::FoxgloveError;
 use thiserror::Error;
 
+/// Errors returned while loading configuration or running the bridge.
 #[derive(Debug, Error)]
 pub enum BridgeError {
     #[error("argument error: {0}")]

@@ -9,7 +9,7 @@ use std::{
 mod Time_generated {
     include!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/schemas/generated/rust/Time_generated.rs"
+        "/schemas/rust/Time_generated.rs"
     ));
     pub use self::foxglove::*;
 }
@@ -18,7 +18,7 @@ mod Time_generated {
 mod Vector3_generated {
     include!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/schemas/generated/rust/Vector3_generated.rs"
+        "/schemas/rust/Vector3_generated.rs"
     ));
     pub use self::foxglove::*;
 }
@@ -27,7 +27,7 @@ mod Vector3_generated {
 mod Quaternion_generated {
     include!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/schemas/generated/rust/Quaternion_generated.rs"
+        "/schemas/rust/Quaternion_generated.rs"
     ));
     pub use self::foxglove::*;
 }
@@ -36,7 +36,7 @@ mod Quaternion_generated {
 mod FrameTransform_generated {
     include!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/schemas/generated/rust/FrameTransform_generated.rs"
+        "/schemas/rust/FrameTransform_generated.rs"
     ));
     pub use self::foxglove::*;
 }
@@ -45,7 +45,7 @@ mod FrameTransform_generated {
 mod FrameTransforms_generated {
     include!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/schemas/generated/rust/FrameTransforms_generated.rs"
+        "/schemas/rust/FrameTransforms_generated.rs"
     ));
     pub use self::foxglove::*;
 }

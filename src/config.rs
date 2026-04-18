@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Top-level configuration for a `gs_visualizer` server instance.
 #[derive(Debug, Clone, Deserialize)]
 pub struct BridgeConfig {
     #[serde(default)]
@@ -17,6 +18,7 @@ pub struct BridgeConfig {
 }
 
 impl BridgeConfig {
+    /// Validates channel uniqueness, publish rates, and schema requirements.
     pub fn validate(mut self) -> Result<Self, BridgeError> {
         if self.channels.is_empty() {
             return Err(BridgeError::Configuration(
@@ -49,6 +51,7 @@ impl BridgeConfig {
     }
 }
 
+/// Foxglove WebSocket server settings.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ServerConfig {
     #[serde(default = "default_host")]
@@ -72,6 +75,7 @@ impl Default for ServerConfig {
     }
 }
 
+/// Shared worker defaults applied to channels.
 #[derive(Debug, Clone, Deserialize)]
 pub struct BridgeOptions {
     #[serde(default = "default_publish_hz")]
@@ -89,6 +93,7 @@ impl Default for BridgeOptions {
     }
 }
 
+/// One TISM source mapped to one Foxglove topic.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ChannelConfig {
     pub tism_address: String,
@@ -112,6 +117,7 @@ pub struct ChannelConfig {
 }
 
 impl ChannelConfig {
+    /// Returns the effective publish rate after applying bridge defaults.
     pub fn effective_publish_hz(&self, defaults: &BridgeOptions) -> f64 {
         self.publish_hz.unwrap_or(defaults.default_publish_hz)
     }
@@ -181,12 +187,14 @@ impl ChannelConfig {
     }
 }
 
+/// Loads a TOML config file from disk.
 pub fn load_config(path: impl AsRef<Path>) -> Result<BridgeConfig, BridgeError> {
     let path = path.as_ref();
     let config_text = fs::read_to_string(path)?;
     parse_config(&config_text, path.parent())
 }
 
+/// Parses a TOML config string and resolves relative schema paths against `base_dir`.
 pub fn parse_config(contents: &str, base_dir: Option<&Path>) -> Result<BridgeConfig, BridgeError> {
     let mut config: BridgeConfig = toml::from_str(contents)?;
 
@@ -212,7 +220,7 @@ fn default_port() -> u16 {
 }
 
 fn default_server_name() -> String {
-    "tism-bridge".to_string()
+    "gs_visualizer".to_string()
 }
 
 fn default_message_backlog_size() -> usize {

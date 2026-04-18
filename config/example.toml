@@ -1,7 +1,7 @@
 [server]
 host = "127.0.0.1"
 port = 8765
-name = "helix-bridge"
+name = "gs_visualizer"
 message_backlog_size = 1024
 
 [bridge]
@@ -16,10 +16,10 @@ on_change_only = false
 message_encoding = "flatbuffer"
 schema_name = "foxglove.FrameTransforms"
 schema_encoding = "flatbuffer"
-schema_path = "schemas/generated/bfbs/FrameTransforms.bfbs"
+schema_path = "../schemas/bfbs/FrameTransforms.bfbs"
 max_message_bytes = 184
 
 [channels.metadata]
-source = "helix_publisher"
+source = "tism"
 parent_frame = "base"
 child_frame = "rocket"

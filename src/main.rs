@@ -25,7 +25,7 @@ fn config_path_from_args() -> Result<OsString, BridgeError> {
     match (args.next(), args.next()) {
         (Some(path), None) => Ok(path),
         _ => Err(BridgeError::Argument(
-            "usage: gs_visualizer <config.toml>".to_string(),
+            "usage: gs_visualizer <path/to/config.toml>".to_string(),
         )),
     }
 }
