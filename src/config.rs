@@ -187,10 +187,7 @@ pub fn load_config(path: impl AsRef<Path>) -> Result<BridgeConfig, BridgeError> 
     parse_config(&config_text, path.parent())
 }
 
-pub fn parse_config(
-    contents: &str,
-    base_dir: Option<&Path>,
-) -> Result<BridgeConfig, BridgeError> {
+pub fn parse_config(contents: &str, base_dir: Option<&Path>) -> Result<BridgeConfig, BridgeError> {
     let mut config: BridgeConfig = toml::from_str(contents)?;
 
     if let Some(base_dir) = base_dir {

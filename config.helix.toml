@@ -1,0 +1,25 @@
+[server]
+host = "127.0.0.1"
+port = 8765
+name = "helix-bridge"
+message_backlog_size = 1024
+
+[bridge]
+default_publish_hz = 30.0
+open_retry_ms = 250
+
+[[channels]]
+tism_address = "helix_publisher"
+topic = "/tf"
+publish_hz = 30.0
+on_change_only = false
+message_encoding = "flatbuffer"
+schema_name = "foxglove.FrameTransforms"
+schema_encoding = "flatbuffer"
+schema_path = "schemas/generated/bfbs/FrameTransforms.bfbs"
+max_message_bytes = 184
+
+[channels.metadata]
+source = "helix_publisher"
+parent_frame = "base"
+child_frame = "rocket"
