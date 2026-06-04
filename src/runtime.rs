@@ -1,4 +1,4 @@
-use crate::{BridgeConfig, BridgeError, BridgeOptions, ChannelConfig, publisher, source_tism};
+use crate::{BridgeConfig, BridgeError, BridgeOptions, ChannelConfig, publisher};
 use foxglove::{Context, RawChannel, WebSocketServerHandle};
 use std::{
     io,
@@ -128,7 +128,10 @@ fn run_channel_worker(
 
     while !shutdown.load(Ordering::Relaxed) {
         let loop_started = Instant::now();
-        let read_result = source_tism::read_once(&prepared.config.tism_address);
+        let read_result = {
+            let mut shm = tism::dynamic::open(prepared.config.tism_address.as_str())?;
+            shm.read()
+        };
 
         match read_result {
             Ok(payload) => {
