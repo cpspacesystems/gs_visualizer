@@ -119,6 +119,7 @@ fn run_channel_worker(
     let mut last_payload: Option<Vec<u8>> = None;
     let mut source_connected = false;
     let mut waiting_for_publisher = false;
+    let mut tism_allocation = tism::dynamic::open(prepared.config.tism_address.as_str())?;
 
     info!(
         topic = prepared.config.topic,
@@ -128,12 +129,8 @@ fn run_channel_worker(
 
     while !shutdown.load(Ordering::Relaxed) {
         let loop_started = Instant::now();
-        let read_result = {
-            let mut shm = tism::dynamic::open(prepared.config.tism_address.as_str())?;
-            shm.read()
-        };
 
-        match read_result {
+        match tism_allocation.read() {
             Ok(payload) => {
                 if !source_connected {
                     info!(
