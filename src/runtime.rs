@@ -1,7 +1,6 @@
-use crate::{BridgeConfig, BridgeError, BridgeOptions, ChannelConfig, publisher, source_tism};
+use crate::{BridgeConfig, BridgeError, BridgeOptions, ChannelConfig, publisher};
 use foxglove::{Context, RawChannel, WebSocketServerHandle};
 use std::{
-    io,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -113,85 +112,57 @@ fn run_channel_worker(
     options: BridgeOptions,
     shutdown: Arc<AtomicBool>,
 ) -> Result<(), BridgeError> {
-    let publish_period =
-        Duration::from_secs_f64(1.0 / prepared.config.effective_publish_hz(&options));
-    let open_retry = Duration::from_millis(options.open_retry_ms);
-    let mut last_payload: Option<Vec<u8>> = None;
-    let mut source_connected = false;
-    let mut waiting_for_publisher = false;
-
     info!(
         topic = prepared.config.topic,
         address = prepared.config.tism_address,
         "starting channel worker"
     );
 
+    let mut tism_allocation = tism::dynamic::open(prepared.config.tism_address.as_str())?;
+    let publish_period =
+        Duration::from_secs_f64(1.0 / prepared.config.effective_publish_hz(&options));
+
+    info!(
+        topic = prepared.config.topic,
+        address = prepared.config.tism_address,
+        "connected to TISM publisher"
+    );
+
     while !shutdown.load(Ordering::Relaxed) {
         let loop_started = Instant::now();
-        let read_result = source_tism::read_once(&prepared.config.tism_address);
 
-        match read_result {
-            Ok(payload) => {
-                if !source_connected {
-                    info!(
-                        topic = prepared.config.topic,
-                        address = prepared.config.tism_address,
-                        "connected to TISM publisher"
-                    );
-                    source_connected = true;
-                }
-                waiting_for_publisher = false;
+        let new_data = match prepared.config.on_change_only {
+            true => tism_allocation.read_change(),
+            false => tism_allocation.read().map(|v| Some(v)),
+        };
 
-                if should_skip_publish(&prepared.config, &payload, last_payload.as_deref()) {
-                } else if exceeds_max_size(&prepared.config, payload.len()) {
+        match new_data {
+            Ok(None) => (),
+
+            Ok(Some(payload)) => {
+                if exceeds_max_size(&prepared.config, payload.len()) {
                     warn!(
                         topic = prepared.config.topic,
                         limit = prepared.config.max_message_bytes.unwrap_or(0),
                         size = payload.len(),
                         "skipping payload that exceeds configured max_message_bytes"
                     );
-
-                    if prepared.config.on_change_only {
-                        last_payload = Some(payload);
-                    }
                 } else {
                     prepared.raw_channel.log(&payload);
-
-                    if prepared.config.on_change_only {
-                        last_payload = Some(payload);
-                    }
                 }
             }
+
             Err(err) => {
-                last_payload = None;
-
-                if err.kind() == io::ErrorKind::NotFound {
-                    if source_connected || !waiting_for_publisher {
-                        info!(
-                            topic = prepared.config.topic,
-                            address = prepared.config.tism_address,
-                            "waiting for live TISM publisher"
-                        );
-                    }
-                    source_connected = false;
-                    waiting_for_publisher = true;
-                    sleep_with_shutdown(open_retry, &shutdown);
-                    continue;
-                }
-
-                waiting_for_publisher = false;
-                source_connected = false;
                 warn!(
                     topic = prepared.config.topic,
                     address = prepared.config.tism_address,
                     "failed reading TISM source: {err}"
                 );
-                sleep_with_shutdown(open_retry, &shutdown);
-                continue;
             }
         }
 
         let elapsed = loop_started.elapsed();
+
         if publish_period > elapsed {
             sleep_with_shutdown(publish_period - elapsed, &shutdown);
         }
@@ -202,15 +173,8 @@ fn run_channel_worker(
         address = prepared.config.tism_address,
         "channel worker stopped"
     );
-    Ok(())
-}
 
-fn should_skip_publish(
-    channel: &ChannelConfig,
-    payload: &[u8],
-    last_payload: Option<&[u8]>,
-) -> bool {
-    channel.on_change_only && last_payload == Some(payload)
+    Ok(())
 }
 
 fn exceeds_max_size(channel: &ChannelConfig, payload_len: usize) -> bool {

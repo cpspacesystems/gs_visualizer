@@ -6,7 +6,6 @@ pub mod implementation;
 mod publisher;
 mod runtime;
 mod schema;
-mod source_tism;
 
 pub use config::{
     BridgeConfig, BridgeOptions, ChannelConfig, ServerConfig, load_config, parse_config,
